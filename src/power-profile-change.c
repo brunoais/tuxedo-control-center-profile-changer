@@ -162,60 +162,98 @@ int test_and_read_file(char* file_name, char* buff){
 static int new_profile_choice(char* profile_location) {
 
     int myPipes[2];
-    char buff[MAX_PROFILE_CONTENTS + 1];
+    char buff[MAX_PROFILE_CONTENTS + 1] = {0};
 
-    if( pipe( myPipes ) < 0 ){
-        perror("Can't pipe through \n");
-        exit(13);
-    }
+    memset(buff, '\0', MAX_PROFILE_CONTENTS + 1);
+
 
     test_and_read_file(profile_location, buff);
 
-    if(verbose_flag) printf("pid is %d; pipe fds are.... %d & %d\n", getpid(), myPipes[PIPE_READ], myPipes[PIPE_WRITE]);
-
-    //close (myPipes[PIPE_READ]);
-    write( myPipes[PIPE_WRITE], buff, strlen(buff) + 1); 
-    close (myPipes[PIPE_WRITE]);
-
-    char* pipeArg;
-    asprintf (&pipeArg, "/proc/%d/fd/%d", getpid(), myPipes[PIPE_READ]);
-    if(verbose_flag) printf("\n%s\n", pipeArg);
-    //sleep(50000);
 
 
-    int pid = fork();
-    switch(pid){
-        case 0:
-            {
+    // int pid = fork();
+    // switch(pid){
+    //     case 0:
+    //         {
+                if( pipe( myPipes ) < 0 ){
+                    perror("Can't pipe through \n");
+                    exit(13);
+                }
+
+                if(verbose_flag) printf("pid is %d; pipe fds are.... %d & %d\n", getpid(), myPipes[PIPE_READ], myPipes[PIPE_WRITE]);
+
+                //close (myPipes[PIPE_READ]);
+                write (myPipes[PIPE_WRITE], buff, strlen(buff)); 
                 close (myPipes[PIPE_WRITE]);
+
+                char* pipeArg;
+                if(verbose_flag){
+                    asprintf (&pipeArg, "/proc/%d/fd/%d", getpid(), myPipes[PIPE_READ]);
+                    printf("\n%s\n", pipeArg);
+                } 
+
+                //sleep(50000);
+                asprintf (&pipeArg, "/dev/fd/%d", myPipes[PIPE_READ]);
+
 
                 char* tccdArgv[] = {
                     "tccd",
                     "--new_settings",
                     pipeArg,
+                    //"/dev/fd/0",
                     NULL
                 };
+                
+
+                // FILE* fp = fopen(pipeArg, "r");
+                // if (fp == NULL) {
+                //     perror("Can't open fd pipe file \n");
+                //     exit(14);
+                // }
+
+                // fread(buff, sizeof(char), strlen(buff) + 1, fp);
+
+                // printf("buff: %s", buff);
+
+                //write(0,  buff, strlen(buff) + 1);
+                //close(0);
+
+
+                // FILE* fp = fopen("/dev/fd/0", "r");
+                // if (fp == NULL) {
+                //     perror("Can't open fd 0 pipe file \n");
+                //     exit(14);
+                // }
+
+                // fread(buff, sizeof(char), strlen(buff) + 1, fp);
+
+                // printf("buff2: %s", buff);
+
+                // puts("scanwait\n");
+                // scanf("%s", buff);
+                // printf("buff2: %s", buff);
+
+                // sleep(5000);
+
                 // tccd must be called as root
                 setuid(0);
-                sleep(5000);
-
+                
                 execvp(tccd_path, tccdArgv);
                 perror("execvp screwed up");
                 exit(15);
-            }
+            // }
 
-        case -1:
-            perror("fork screwed up ");
-            exit(16);
-    }
+    //     case -1:
+    //         perror("fork screwed up ");
+    //         exit(16);
+    // }
     
-    wait(NULL);
-    close (myPipes[PIPE_READ]);
+    // wait(NULL);
 
-    puts("done");
+    // puts("done");
 
     
-    return EXIT_SUCCESS;
+    // return EXIT_SUCCESS;
 }
 
 
@@ -266,6 +304,10 @@ int main(int argc, char* argv[]) {
             case 'h':
                 dump_help();
                 exit(255);
+            break;
+
+            case 'v':
+                verbose_flag = 1;
             break;
 
             case '?':
