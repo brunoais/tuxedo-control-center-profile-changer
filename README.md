@@ -1,3 +1,9 @@
+# Unmaintained
+
+## Due to the current quick way to change profile which works with dbus, this script is discontinued. I'm leaving this repo open in case someone wants to ask questions about this in case one wants to try using this code for other purposes
+
+----------------
+
 # Tuxedo Control Center (TCC) Profile Changer
 An unaffiliated external profile changer for tuxedo-control-center
 
